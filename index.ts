@@ -1,25 +1,41 @@
 import express from 'express';
 import cors from 'cors'
-import { Pool } from 'pg';
+import sql from 'msnodesqlv8';
+// import { Pool } from 'pg';
 import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
+let connection: MsNodeSqlV8.Connection;
+sql.open(process.env.MSSQL_CONNECTION_STRING!, (err, conn) => {
+  if (err) {
+    console.error('Error connecting to MSSQL:', err);
+  } else {
+    connection = conn;
+    console.log('Connected to MSSQL database');
   }
-})
+});
+
+// const pool = new Pool({
+//   connectionString: process.env.DATABASE_URL,
+//   ssl: {
+//     rejectUnauthorized: false
+//   }
+// })
 
 app.get('/api/spanish_nouns', async (req, res) => {
-  const result = await pool.query('SELECT * FROM spanish_nouns')
-  res.json(result.rows);
+  connection.query('SELECT * FROM spanish_nouns', (err, rows) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } else {
+      res.json(rows);
+    }
+  });
 })
 
-const PORT = process.env.PORT || 4000;
+const PORT = 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
