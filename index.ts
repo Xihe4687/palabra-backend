@@ -1,40 +1,22 @@
 import express from 'express';
 import cors from 'cors'
-import sql from 'msnodesqlv8';
 // import { Pool } from 'pg';
-import dotenv from 'dotenv';
-dotenv.config();
+import nounsRouter from './routes/spanish/noun.ts';
+import adjRouter from './routes/spanish/adjective.ts'
+import verbRouter from './routes/spanish/verb.ts';
+import advRouter from './routes/spanish/adverb.ts';
+import prepositionRouter from './routes/spanish/preposition.ts'
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-let connection: MsNodeSqlV8.Connection;
-sql.open(process.env.MSSQL_CONNECTION_STRING!, (err, conn) => {
-  if (err) {
-    console.error('Error connecting to MSSQL:', err);
-  } else {
-    connection = conn;
-    console.log('Connected to MSSQL database');
-  }
-});
 
-// const pool = new Pool({
-//   connectionString: process.env.DATABASE_URL,
-//   ssl: {
-//     rejectUnauthorized: false
-//   }
-// })
+app.use('/api/spanish/nouns', nounsRouter);
+app.use('/api/spanish/adjectives', adjRouter);
+app.use('/api/spanish/verbs', verbRouter);
+app.use('/api/spanish/adverbs', advRouter);
+app.use('/api/spanish/prepositions', prepositionRouter);
 
-app.get('/api/spanish_nouns', async (req, res) => {
-  connection.query('SELECT * FROM spanish_nouns', (err, rows) => {
-    if (err) {
-      console.error('Error executing query:', err);
-      res.status(500).json({ error: 'Internal Server Error' });
-    } else {
-      res.json(rows);
-    }
-  });
-})
 
 const PORT = 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
