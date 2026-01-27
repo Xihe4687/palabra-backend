@@ -51,7 +51,7 @@ router.put('/:id', async (req, res) => {
     const payload: SpanishNoun = req.body;
 
     const fields = Object.keys(payload).filter(f => f !== 'id') as (keyof SpanishNoun)[];
-    const values = fields.map(f => typeof payload[f] === 'string' ? `N'${payload[f]}'` : payload[f]);
+    const values = fields.map(f => payload[f]);
     const setClause = fields.map(f => `${f} = ?`).join(', ');
 
     // 第一句：更新

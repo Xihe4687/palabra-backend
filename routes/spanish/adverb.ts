@@ -45,7 +45,7 @@ router.put('/:id', async (req, res) => {
     const id = +req.params.id;
     const payload = req.body as SpanishAdverb;
     const fields = Object.keys(payload).filter(f => f !== 'id') as (keyof SpanishAdverb)[];
-    const values = fields.map(f => typeof payload[f] === 'string' ? `N'${payload[f]}'` : payload[f]);
+    const values = fields.map(f => payload[f]);
     const setClause = fields.map(f => `${f} = ?`).join(', ');
     const query = `update spanish_adverbs set ${setClause} where id = ?`;
     await runQuery(query, [...values, id]);
