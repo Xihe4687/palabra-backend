@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
 })
 router.get('/random', (req, res) => {
   const limit = parseInt(String(req.query.limit)) || 10;
-  const query = `SELECT TOP ${limit} * FROM spanish_nouns ORDER BY -LOG((ABS(CHECKSUM(NEWID())) + 1) / 2147483648.0) / (TRY_CAST(wrongTimes AS float) + 1);`;
+  const query = `SELECT TOP ${limit} * FROM spanish_nouns ORDER BY -LOG((ABS(CHECKSUM(NEWID())) + 1) / 2147483648.0) / LOG(wrongTimes + 100);`;
   connection?.query(query, (err, rows) => {
     if (err) {
       console.log(err);
@@ -51,7 +51,7 @@ router.put('/:id', async (req, res) => {
     const payload: SpanishNoun = req.body;
 
     const fields = Object.keys(payload).filter(f => f !== 'id') as (keyof SpanishNoun)[];
-    const values = fields.map(f => payload[f]);
+    const values = fields.map(f => typeof payload[f] === 'string' ? `N'${payload[f]}'` : payload[f]);
     const setClause = fields.map(f => `${f} = ?`).join(', ');
 
     // 第一句：更新
@@ -75,7 +75,7 @@ router.post('/', async (req, res) => {
   try {
     const payload: SpanishNoun = req.body;
     const fields = Object.keys(payload).filter(f => f !== 'id') as (keyof SpanishNoun)[];
-    const values = fields.map(f => typeof payload[f] === 'string' ? `'${payload[f]}'` : payload[f]);
+    const values = fields.map(f => typeof payload[f] === 'string' ? `N'${payload[f]}'` : payload[f]);
     const insertClause = fields.join(', ');
     const insertValues = values.join(', ')
     await runQuery(`insert into spanish_nouns (${insertClause}) values (${insertValues});`);

@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
 router.get('/random', async (req, res) => {
   try {
     const limit = parseInt(String(req.query.limit)) || 10;
-    const query = `SELECT TOP ${limit} * FROM spanish_verbs ORDER BY -LOG((ABS(CHECKSUM(NEWID())) + 1) / 2147483648.0) / (TRY_CAST(wrongTimes AS float) + 1);`;
+    const query = `SELECT TOP ${limit} * FROM spanish_verbs ORDER BY -LOG((ABS(CHECKSUM(NEWID())) + 1) / 2147483648.0) / LOG(wrongTimes + 100);`;
     const rows = await runQuery(query);
     res.status(200).json(rows);
   } catch (error) {
@@ -45,7 +45,7 @@ router.put('/:id', async (req, res) => {
     const id = +req.params.id;
     const payload = req.body as SpanishVerb;
     const fields = Object.keys(payload).filter(f => f !== 'id') as (keyof SpanishVerb)[];
-    const values = fields.map(f => payload[f]);
+    const values = fields.map(f => typeof payload[f] === 'string' ? `N'${payload[f]}'` : payload[f]);
     const setClause = fields.map(f => `${f} = ?`).join(', ');
     const query = `update spanish_verbs set ${setClause} where id = ?`;
     await runQuery(query, [...values, id]);
@@ -65,12 +65,12 @@ router.post('/', async (req, res) => {
   try {
     const payload = req.body as SpanishVerb;
     const fields = Object.keys(payload).filter(f => f !== 'id') as (keyof SpanishVerb)[];
-    const values = fields.map(f => typeof payload[f] === 'string' ? `'${payload[f]}'` : payload[f]);
+    const values = fields.map(f => typeof payload[f] === 'string' ? `N'${payload[f]}'` : payload[f]);
     const insertClause = fields.join(', ')
     const insertValues = values.join(', ')
     const query = `insert into spanish_verbs (${insertClause}) values (${insertValues})`;
     await runQuery(query);
-    const rows = await runQuery('select * from spanish_verbs where spanish = ?', [payload.infinity]);
+    const rows = await runQuery('select * from spanish_verbs where infinity = ?', [payload.infinity]);
     if (rows.length) {
       res.status(200).json(rows[0]);
     } else {
